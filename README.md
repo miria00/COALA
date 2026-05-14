@@ -63,38 +63,31 @@ parallelises efficiently on a single GPU.
 COALAgit/
 ├── paper/                         # ICML 2026 manuscript
 ├── solve/                         # CRONOS / cvxNN core
-│   ├── models/                    #   cvx_relu_mlp, relu_mlp, two_layer_mlp, ...
-│   ├── optimizers/                #   admm, pcg, adamW, varpro, dadapt_adamW
+│   ├── models/                    #   cvx_mlp, cvx_relu_mlp, two_layer_mlp, get_model
+│   ├── optimizers/                #   admm, pcg, adamW, dadapt_adamW, varpro
 │   ├── preconditioner/            #   nystrom
-│   ├── training/                  #   train, train_no_jit
+│   ├── training/                  #   train
 │   ├── experiments/               #   lr_experiment
-│   └── utils/                     #   gpt2_dataloader, load_data, model_utils, ...
-├── utils/                         # data loading / tokenisation helpers
-├── dataset_utils/                 # preference-data preprocessing
-├── handy_functions/               # misc helpers
+│   └── utils/                     #   gpt2_dataloader, model_utils, opt_utils,
+│                                  #   metric_utils, proximal_utils, linops_utils,
+│                                  #   train_utils
 │
-├── sft_train_first.py             # (optional) Stage 0 — SFT base
 ├── extract.py                     # Stage 1 — feature extraction (chosen / rejected)
 ├── extract_prep_prefdata.py       #         preference-data prep for extract.py
+├── LMdata_utils.py                #         dataset / collator classes used by extract.py
+│
 ├── cronos_trainer.py              # Stage 2 — Phase I (CRONOS, Algorithm 2)
-├── finetune_cvxdpo.py             # Stage 3 — Phase II (COALA loss, Algorithm 1)
 ├── defrun.py                      #         run wrapper for CRONOS
-├── test_model_weights.py          #         sanity-check saved cvxNN
-├── guided_inference.py            # Stage 4 — IMDb-style guided sampling
-├── guidance_sampling_pool.py      #         general attention-pooled sampling
-├── guidance_sampling_pool2.py     #         updated multi-prompt batched sampling
 │
-├── dpo_train_demo.py              # DPO baseline (TRL)
-├── orpo_train_demo.py             # ORPO baseline (TRL)
+├── finetune_cvxdpo.py             # Stage 3 — Phase II (COALA loss, Algorithm 1)
 │
-├── download_datasets.py           # pull / format HelpSteer, UltraFeedback, IMDb, EduFeedback
-├── generate_competitors.py        # generate text from DPO/ORPO/SFT for comparison
-├── run_pairwise_judge.py          # GPT-4 pairwise judge (Table 2 / Table 7)
-│
-├── plot_*.py / scatter_tflops.py  # paper figures
-│
-└── *.sh                           # end-to-end pipeline drivers
+└── guidance_sampling_pool2.py     # Stage 4 — guided generation
 ```
+
+This is the *minimal* reproducible pipeline. Baseline scripts (DPO / ORPO / SFT),
+evaluation drivers, paper plotting code, and the multi-backbone batch scripts
+that ran the full paper are tracked in the development branch but excluded here
+to keep the canonical reference clean.
 
 ## Installation
 
@@ -111,25 +104,22 @@ python -m venv .venv && source .venv/bin/activate
 pip install --upgrade "jax[cuda12]==0.4.33"
 
 # Core dependencies
-pip install torch transformers trl peft datasets accelerate bitsandbytes \
-            numpy pandas scikit-learn wandb optax tqdm matplotlib seaborn
-
-# Verify JAX sees your GPU
-python jaxtest.py
+pip install torch transformers peft datasets accelerate \
+            numpy pandas optax wandb tqdm
 ```
 
 ## Quickstart
 
-The four-stage pipeline reproduces COALA on a single dataset/backbone pair.
+The four-stage pipeline reproduces COALA on a single dataset / backbone pair.
 
 ```bash
-# (Optional) Stage 0 — SFT pretraining
-python sft_train_first.py
+# (Optional, only if your preference data is in JSON pairs) — prep into pos/neg txt
+python extract_prep_prefdata.py
 
-# Stage 1 — extract frozen features (chosen / rejected pairs)
+# Stage 1 — extract frozen features (chosen / rejected)
 python extract.py \
     --model_path  <hf-model-or-sft-ckpt> \
-    --data_path   datasets/edu/ \
+    --data_path   datasets/<your-dataset>/ \
     --pool        attn \
     --output_base extracted_features/
 
@@ -144,32 +134,6 @@ python finetune_cvxdpo.py \
 # Stage 4 — guided generation
 python guidance_sampling_pool2.py
 ```
-
-Driver scripts batch the above across all five backbones × three datasets:
-
-```bash
-./run_coala_pipeline_final.sh        # main COALA pipeline (Stages 2–3)
-./extract_features.sh                # batch feature extraction
-```
-
-The DPO and ORPO baselines used in the paper are reproduced via
-`dpo_train_demo.py` and `orpo_train_demo.py`.
-
-## Evaluation
-
-Generate text from all four methods (COALA / DPO / ORPO / SFT) for head-to-head
-comparison, then judge with GPT-4:
-
-```bash
-# Sample outputs from each method × backbone × dataset (3 runs each)
-python generate_competitors.py
-
-# GPT-4 pairwise judge — produces win-rate tables (paper Table 2 / Table 7)
-python run_pairwise_judge.py
-```
-
-Set `OPENAI_API_KEY` in `.env` (loaded automatically) before running the
-pairwise judge.
 
 > **Note.** Several scripts contain absolute paths (e.g. `/home/miria/COALA/...`)
 > from the original development environment. Adjust `BASE_DIR`, dataset, and
