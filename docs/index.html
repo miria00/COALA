@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta name="title" content="COALA: Convex Optimization for Alignment and Preference Learning on a Single GPU">
+  <meta name="description" content="COALA recasts preference fine-tuning of LLMs as a convex optimization problem, fitting on a single consumer GPU, with no reference model and provable convergence.">
+  <meta name="keywords" content="COALA, convex optimization, preference learning, RLHF, DPO, LLM alignment, single GPU, ADMM, CRONOS, JAX, ICML 2026">
+  <meta name="author" content="Miria Feng, Mert Pilanci">
+  <meta name="robots" content="index, follow">
+
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="COALA Project Page">
+  <meta property="og:title" content="COALA: Convex Optimization for Alignment and Preference Learning on a Single GPU">
+  <meta property="og:description" content="A reference-free, convex framework for preference fine-tuning of LLMs that runs end-to-end on a single RTX 4090.">
+  <meta property="og:url" content="https://miria00.github.io/COALA/">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="COALA: Convex Optimization for Alignment and Preference Learning on a Single GPU">
+  <meta name="twitter:description" content="A reference-free, convex framework for preference fine-tuning of LLMs that runs end-to-end on a single RTX 4090.">
+
+  <meta name="citation_title" content="Convex Optimization for Alignment and Preference Learning on a Single GPU">
+  <meta name="citation_author" content="Feng, Miria">
+  <meta name="citation_author" content="Pilanci, Mert">
+  <meta name="citation_publication_date" content="2026">
+  <meta name="citation_conference_title" content="International Conference on Machine Learning (ICML)">
+  <meta name="citation_pdf_url" content="https://github.com/miria00/COALA/blob/main/paper/Coala_preflearn_icml2026.pdf">
+
+  <meta name="theme-color" content="#1e293b">
+
+  <title>COALA &mdash; Convex Optimization for Alignment and Preference Learning | ICML 2026</title>
+
+  <!-- Empty inline favicon to suppress Chrome's default /favicon.ico request -->
+  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22&gt;&lt;text y=%22.9em%22 font-size=%2290%22&gt;&#128040;&lt;/text&gt;&lt;/svg&gt;">
+
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+  <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- MathJax for inline equations -->
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+
+  <style>
+    /* COALA-specific tweaks layered on top of template index.css */
+
+    /* Override template's loud accent palette with a single calm blue */
+    :root {
+      --cardinal: #1d4ed8;
+      --cardinal-dark: #1e3a8a;
+      --primary-color: #1d4ed8;
+      --primary-hover: #1e3a8a;
+      --gradient-primary: none;
+      --gradient-accent: none;
+      --gradient-subtle: none;
+    }
+
+    /* Kill template's animated underscore; use a static subtle underline that darkens on hover */
+    .publication-authors a::after { display: none !important; }
+    .publication-authors a {
+      color: #1e293b !important;
+      font-weight: 500;
+      text-decoration: underline;
+      text-decoration-color: #cbd5e1;
+      text-underline-offset: 3px;
+    }
+    .publication-authors a:hover {
+      color: var(--cardinal) !important;
+      text-decoration-color: var(--cardinal);
+    }
+
+    /* Replace template's gradient-red H3 underline with a thin cardinal line */
+    .title.is-3::after {
+      background: var(--cardinal) !important;
+      width: 40px !important;
+      height: 2px !important;
+      border-radius: 0 !important;
+    }
+    .title.is-3 {
+      padding-bottom: 0.75rem !important;
+      margin-bottom: 1.5rem !important;
+    }
+
+    /* Buttons: dark with subtle cardinal hover, no lift */
+    .button.is-dark { box-shadow: none !important; }
+    .button.is-dark:hover {
+      transform: none !important;
+      background: var(--cardinal) !important;
+      box-shadow: none !important;
+    }
+    .button.is-dark:active { transform: none !important; }
+
+    /* Drop the page-load fadeInUp on every section (template-y) */
+    .hero, .section { animation: none !important; }
+
+    /* Result-headline: cardinal accent on neutral background */
+    .result-headline {
+      background: #fafafa !important;
+      border-left: 3px solid var(--cardinal) !important;
+      color: #1e293b !important;
+    }
+
+    /* Slightly smaller base type than template default */
+    body { font-size: 14.5px; }
+    .publication-title { font-size: 2.4rem !important; margin-bottom: 1.25rem !important; }
+    .publication-authors { font-size: 1rem !important; margin-bottom: 0.75rem !important; }
+    .publication-authors.is-size-6 { font-size: 0.9rem !important; }
+    .title.is-3 { font-size: 1.5rem !important; margin-bottom: 1.5rem !important; padding-bottom: 0.75rem; }
+    .subtitle.is-4 { font-size: 1.1rem !important; }
+    .hero-body { padding: 2.5rem 1.5rem; }
+    .section { padding: 2.5rem 1.5rem; }
+    .content.has-text-justified { font-size: 0.98rem; line-height: 1.7; }
+    .content p { font-size: 0.98rem; }
+    pre { font-size: 0.82rem !important; padding: 1.25rem !important; }
+    .button.is-normal { font-size: 0.85rem !important; padding: 0.5rem 1rem !important; }
+
+    /* ICML badge */
+    .icml-badge {
+      display: inline-block;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.8rem;
+      letter-spacing: 0.04em;
+      color: var(--cardinal);
+      background: transparent;
+      border: 1px solid var(--cardinal);
+      padding: 0.3rem 0.75rem;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+    }
+
+    .figure-placeholder {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--border-radius);
+      background: var(--background-accent);
+      color: var(--text-light);
+      text-align: center;
+      padding: 3rem 1.5rem;
+      font-family: 'SF Mono', 'Monaco', monospace;
+      font-size: 0.85rem;
+      margin: 1.5rem 0;
+    }
+    .figure-placeholder strong { color: var(--text-secondary); display: block; margin-bottom: 0.5rem; font-family: 'Inter', sans-serif; font-size: 1rem; }
+    .result-headline {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+      border-left: 4px solid #10b981;
+      padding: 1rem 1.25rem;
+      border-radius: var(--border-radius);
+      margin: 1rem 0 1.5rem;
+    }
+    .method-phase {
+      background: var(--background-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-lg);
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+    .method-phase h3 {
+      font-family: 'Inter', sans-serif;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+      font-size: 1.15rem;
+    }
+    .method-phase h3 .phase-tag {
+      display: inline-block;
+      background: var(--cardinal);
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      margin-right: 0.6rem;
+      vertical-align: middle;
+    }
+    .results-table table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      background: var(--background-primary);
+    }
+    .results-table th, .results-table td {
+      padding: 0.6rem 0.8rem;
+      border-bottom: 1px solid var(--border-color);
+      text-align: right;
+    }
+    .results-table th:first-child, .results-table td:first-child { text-align: left; }
+    .results-table thead th {
+      background: var(--background-accent);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .results-table .model-row td {
+      background: var(--background-secondary);
+      font-weight: 600;
+      color: var(--text-primary);
+      font-style: italic;
+    }
+    .results-table .coala-row td { background: #f0f9ff; }
+    .results-table td strong { font-weight: 700; color: var(--text-primary); }
+    .results-table caption {
+      caption-side: bottom;
+      text-align: left;
+      padding-top: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-style: italic;
+    }
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin: 1rem 0 1.5rem;
+    }
+    .compare-fig {
+      margin: 0;
+      background: var(--background-primary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+    }
+    .compare-fig img {
+      width: 100%;
+      aspect-ratio: 866 / 506;
+      object-fit: contain;
+      display: block;
+      background: #fff;
+    }
+    .compare-fig figcaption {
+      padding: 0.7rem 0.95rem;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      background: var(--background-secondary);
+      border-top: 1px solid var(--border-color);
+      flex: 1 1 auto;
+      line-height: 1.45;
+    }
+    @media screen and (max-width: 768px) {
+      .compare-grid { grid-template-columns: 1fr; }
+      .hook { font-size: 1.35rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <main id="main-content">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">
+              COALA: Convex Optimization for Alignment and Preference Learning on a Single GPU
+            </h1>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://scholar.google.com/citations?user=A8_MiuQAAAAJ&amp;hl=en" target="_blank" rel="noopener">Miria Feng</a>,
+              </span>
+              <span class="author-block">
+                <a href="https://web.stanford.edu/~pilanci/" target="_blank" rel="noopener">Mert Pilanci</a>
+              </span>
+            </div>
+
+            <div class="is-size-6 publication-authors">
+              <span class="author-block">Stanford University</span>
+            </div>
+
+            <div><span class="icml-badge">ICML&nbsp;2026</span></div>
+
+            <div class="column has-text-centered">
+              <div class="publication-links">
+                <span class="link-block">
+                  <a href="https://github.com/miria00/COALA/blob/main/paper/Coala_preflearn_icml2026.pdf" target="_blank" rel="noopener" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                    <span>Paper</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="https://github.com/miria00/COALA/" target="_blank" rel="noopener" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fab fa-github"></i></span>
+                    <span>Code</span>
+                  </a>
+                </span>
+                <span class="link-block">
+                  <a href="#BibTeX" class="external-link button is-normal is-rounded is-dark">
+                    <span class="icon"><i class="fas fa-quote-right"></i></span>
+                    <span>BibTeX</span>
+                  </a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Abstract -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered has-text-centered">
+        <div class="column is-four-fifths">
+          <h2 class="title is-3">Abstract</h2>
+          <div class="content has-text-justified">
+            <p>
+              Fine-tuning large language models (LLMs) to align with human preferences has driven
+              the success of systems such as Gemini and ChatGPT. However, approaches like
+              Reinforcement Learning from Human Feedback (RLHF) remain computationally expensive
+              and complex. Direct Preference Optimization (DPO) offers a simpler alternative but
+              has limitations such as inconsistent ranking accuracy, high dependence on expensive
+              GPU resources, and expansive hyperparameter tuning.
+            </p>
+            <p>
+              We propose the <strong>Convex Optimization for Alignment and Preference Learning
+              Algorithm (COALA)</strong>: a novel lightweight strategy with strong theoretical
+              guarantees. By leveraging the convex optimization reformulation of neural networks,
+              COALA eliminates the need for a reference model and obtains significant reduction
+              in both training time and VRAM consumption, thus enabling efficient training on a
+              single GPU.
+            </p>
+            <p>
+              Experiments across three datasets&mdash;including a 23,228-sample synthetic Educational
+              Feedback dataset&mdash;and five models (including LLaMA-8B) demonstrate COALA's
+              competitive performance and efficiency in utilizing as little as &asymp;17.6% of
+              DPO's total TFLOPS. COALA exhibits stable, monotonically increasing rewards and
+              reaches peak margins in significantly shorter time in comparison to traditional
+              methods such as DPO and ORPO. To the best of our knowledge, this is the first time
+              convex optimization has been effectively applied to preference fine-tuning of LLMs.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Method -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Method</h2>
+      <div class="content">
+        <p style="font-size: 1.05rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto 2rem; text-align: center;">
+          COALA stacks a convex two-layer ReLU network on the frozen features of a pre-trained
+          backbone $f_{\theta_\mathrm{pre}}$, then runs in three phases: two convex training
+          stages followed by guided decoding at inference time.
+        </p>
+
+        <div class="method-phase">
+          <h3><span class="phase-tag">Phase I</span> CRONOS &mdash; convex cvxNN training</h3>
+          <p>
+            Solve the convex reformulation of the two-layer ReLU network
+            (<a href="https://arxiv.org/abs/2002.10588" target="_blank" rel="noopener">Pilanci &amp; Ergen, 2020</a>)
+            using <strong>CRONOS</strong>, an ADMM solver with preconditioned conjugate gradients
+            (<a href="https://arxiv.org/abs/2411.01088" target="_blank" rel="noopener">Feng, Frangella &amp; Pilanci, 2024</a>).
+            The ADMM subproblems reduce to a vector add and one matrix&ndash;vector product, which
+            JAX parallelises efficiently on a single GPU. Phase I outputs weights
+            $(\Theta_1, \theta_2)$ with an $\mathcal{O}(1/K)$ ergodic convergence guarantee
+            (Theorem&nbsp;4.2).
+          </p>
+        </div>
+
+        <div class="method-phase">
+          <h3><span class="phase-tag">Phase II</span> Convex preference fine-tuning</h3>
+          <p>
+            Freeze $\Theta_1$. The reference-free COALA loss is convex in $\theta_2$:
+          </p>
+          <div style="text-align: center; padding: 0.5rem 0;">
+            $$
+            \min_{\theta_2}\;\;
+            \mathbb{E}_{(x, y_w, y_l) \sim \mathcal{D}}\,
+            \log\!\Big(1 + \exp\!\big(-\beta\, y_w\, \theta_2^\top
+            (\Theta_1 f_{\theta_\mathrm{pre}}(x))_+ + \gamma\big)\Big).
+            $$
+          </div>
+          <p>
+            This is a logistic regression in $\theta_2$, solved by AdamW (a stand-in for AGD)
+            with an $\mathcal{O}(1/k^2)$ accelerated-gradient guarantee
+            (Theorem&nbsp;4.3). Because only the last layer is trained, COALA fits on a single
+            RTX&nbsp;4090 (24&nbsp;GB) where DPO &amp; ORPO require an A100 (40&nbsp;GB).
+          </p>
+        </div>
+
+        <div class="method-phase">
+          <h3><span class="phase-tag">Phase III</span> Guided inference</h3>
+          <p>
+            At decoding time the frozen cvxNN head reweights the base LM's nucleus-sampled
+            candidates (top-$p$&nbsp;0.9, top-$k$&nbsp;50) every $N = 5$ tokens. For each
+            candidate $c$, the cvxNN scores the one-step extension $p_t \oplus c$, the scalar
+            scores are min&ndash;max normalised, and a guidance scale $\lambda$ blends them
+            into the base LM's distribution before sampling. No retraining &mdash; preference
+            signal is applied at sampling time.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Results -->
+  <section class="section hero is-light">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Results</h2>
+
+      <!-- 6.1 Reward margins -->
+      <div class="content">
+        <h3 class="subtitle is-4" style="font-weight: 700; margin-top: 1rem;">Stable, monotonic reward margins</h3>
+        <p>
+          Across five backbones and three datasets, COALA's reward margin increases
+          monotonically &mdash; a direct consequence of optimizing a convex objective. DPO's
+          margins, in contrast, are noisy and frequently plateau or decay (paper Fig.&nbsp;1).
+        </p>
+        <div class="compare-grid">
+          <figure class="compare-fig">
+            <img src="static/images/reward_margins_coala.png" alt="COALA reward margin curves across five models, all monotonically increasing." loading="lazy">
+            <figcaption><strong>(a) COALA</strong> &mdash; reward margins increase stably and monotonically across all five models.</figcaption>
+          </figure>
+          <figure class="compare-fig">
+            <img src="static/images/reward_margins_dpo.png" alt="DPO reward margin curves across five models, noisy and frequently decaying." loading="lazy">
+            <figcaption><strong>(b) DPO</strong> &mdash; reward margins are noisy and hyperparameter-sensitive across the same five models.</figcaption>
+          </figure>
+        </div>
+      </div>
+
+      <!-- 6.2 AlpacaEval2 -->
+      <div class="content" style="margin-top: 3rem;">
+        <h3 class="subtitle is-4" style="font-weight: 700;">AlpacaEval2 across 5 models &times; 3 datasets</h3>
+        <p>COALA matches or beats DPO and ORPO on AlpacaEval2 length-controlled win rate.</p>
+        <div class="results-table" style="overflow-x: auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th colspan="3">LC Win Rate %</th>
+                <th colspan="3">Win Rate %</th>
+                <th colspan="3">Avg Length</th>
+              </tr>
+              <tr>
+                <th></th>
+                <th>Edu</th><th>IMDb</th><th>Ultra</th>
+                <th>Edu</th><th>IMDb</th><th>Ultra</th>
+                <th>Edu</th><th>IMDb</th><th>Ultra</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="model-row"><td colspan="10">Mistral-7B</td></tr>
+              <tr class="coala-row"><td>COALA</td><td><strong>24.61&plusmn;0.30</strong></td><td><strong>24.88&plusmn;1.46</strong></td><td><strong>20.84&plusmn;1.35</strong></td><td><strong>23.82&plusmn;1.38</strong></td><td><strong>23.11&plusmn;1.96</strong></td><td><strong>20.91&plusmn;1.65</strong></td><td>592&plusmn;37</td><td>418&plusmn;30</td><td>459&plusmn;35</td></tr>
+              <tr><td>ORPO</td><td>17.01&plusmn;2.82</td><td>17.58&plusmn;2.32</td><td>16.04&plusmn;2.30</td><td>14.67&plusmn;2.87</td><td>15.62&plusmn;2.48</td><td>12.28&plusmn;2.34</td><td>561&plusmn;30</td><td>368&plusmn;39</td><td>350&plusmn;31</td></tr>
+              <tr><td>DPO</td><td>24.19&plusmn;1.19</td><td>24.30&plusmn;1.26</td><td>17.68&plusmn;1.67</td><td>22.45&plusmn;1.50</td><td>22.74&plusmn;1.26</td><td>15.56&plusmn;2.11</td><td>492&plusmn;37</td><td>502&plusmn;55</td><td>453&plusmn;34</td></tr>
+              <tr><td>SFT</td><td>6.80&plusmn;0.51</td><td>8.42&plusmn;1.16</td><td>6.18&plusmn;1.31</td><td>10.30&plusmn;1.03</td><td>1.77&plusmn;1.73</td><td>6.11&plusmn;1.59</td><td>515&plusmn;20</td><td>428&plusmn;31</td><td>463&plusmn;34</td></tr>
+
+              <tr class="model-row"><td colspan="10">Dolphin-7B</td></tr>
+              <tr class="coala-row"><td>COALA</td><td><strong>40.81&plusmn;0.22</strong></td><td><strong>39.72&plusmn;0.36</strong></td><td><strong>31.58&plusmn;0.34</strong></td><td><strong>39.05&plusmn;0.29</strong></td><td><strong>38.46&plusmn;0.41</strong></td><td><strong>30.21&plusmn;0.38</strong></td><td>439&plusmn;38</td><td>454&plusmn;33</td><td>445&plusmn;37</td></tr>
+              <tr><td>ORPO</td><td>25.06&plusmn;1.93</td><td>24.90&plusmn;1.23</td><td>22.94&plusmn;1.26</td><td>23.59&plusmn;1.18</td><td>22.92&plusmn;1.77</td><td>25.93&plusmn;2.51</td><td>526&plusmn;9</td><td>448&plusmn;37</td><td>452&plusmn;45</td></tr>
+              <tr><td>DPO</td><td>34.73&plusmn;0.80</td><td>33.86&plusmn;0.72</td><td>26.41&plusmn;0.68</td><td>32.46&plusmn;1.09</td><td>31.58&plusmn;1.52</td><td>24.86&plusmn;1.02</td><td>494&plusmn;34</td><td>511&plusmn;49</td><td>476&plusmn;35</td></tr>
+              <tr><td>SFT</td><td>17.36&plusmn;0.38</td><td>16.21&plusmn;0.23</td><td>14.88&plusmn;0.46</td><td>15.30&plusmn;0.10</td><td>15.47&plusmn;0.44</td><td>12.76&plusmn;1.08</td><td>404&plusmn;39</td><td>423&plusmn;25</td><td>459&plusmn;24</td></tr>
+
+              <tr class="model-row"><td colspan="10">LLaMA-8B</td></tr>
+              <tr class="coala-row"><td>COALA</td><td><strong>40.90&plusmn;0.09</strong></td><td><strong>27.64&plusmn;0.27</strong></td><td><strong>20.64&plusmn;0.08</strong></td><td>38.20&plusmn;0.11</td><td><strong>25.68&plusmn;0.36</strong></td><td><strong>18.32&plusmn;0.23</strong></td><td>562&plusmn;12</td><td>415&plusmn;33</td><td>552&plusmn;20</td></tr>
+              <tr><td>ORPO</td><td>23.87&plusmn;0.60</td><td>12.10&plusmn;0.71</td><td>12.91&plusmn;0.50</td><td>20.58&plusmn;0.68</td><td>12.05&plusmn;0.55</td><td>10.95&plusmn;0.55</td><td>599&plusmn;70</td><td>610&plusmn;33</td><td>354&plusmn;41</td></tr>
+              <tr><td>DPO</td><td>40.68&plusmn;0.10</td><td>21.79&plusmn;0.29</td><td>18.89&plusmn;0.31</td><td><strong>38.53&plusmn;0.47</strong></td><td>20.18&plusmn;0.49</td><td>15.81&plusmn;0.30</td><td>539&plusmn;24</td><td>449&plusmn;98</td><td>503&plusmn;39</td></tr>
+              <tr><td>SFT</td><td>10.92&plusmn;0.20</td><td>8.16&plusmn;0.11</td><td>7.41&plusmn;0.30</td><td>10.75&plusmn;0.39</td><td>8.11&plusmn;0.66</td><td>5.62&plusmn;0.78</td><td>384&plusmn;55</td><td>435&plusmn;49</td><td>546&plusmn;15</td></tr>
+            </tbody>
+            <caption>Table 1. AlpacaEval2 metrics (mean &plusmn; std over 3 runs) by alignment method for three models across three datasets.</caption>
+          </table>
+        </div>
+      </div>
+
+      <!-- 6.4 Human evaluation -->
+      <div class="content" style="margin-top: 3rem;">
+        <h3 class="subtitle is-4" style="font-weight: 700;">Real human evaluation (107 participants)</h3>
+        <div class="result-headline">
+          COALA wins <strong>39.1%</strong> on EduFeedback and <strong>42.7%</strong> on IMDb &mdash;
+          the highest win rate on both datasets in a double-blind 107-person study.
+        </div>
+        <div class="results-table">
+          <table>
+            <thead>
+              <tr><th>Dataset</th><th>COALA</th><th>ORPO</th><th>DPO</th><th>SFT</th></tr>
+            </thead>
+            <tbody>
+              <tr class="coala-row"><td>EduFeedback</td><td><strong>39.1%</strong></td><td>15.5%</td><td>28.8%</td><td>16.6%</td></tr>
+              <tr class="coala-row"><td>IMDb</td><td><strong>42.7%</strong></td><td>20.1%</td><td>24.8%</td><td>12.4%</td></tr>
+            </tbody>
+            <caption>Table 2. Win rates from 107 real-human double-blind evaluations across two datasets.</caption>
+          </table>
+        </div>
+      </div>
+
+      <!-- 6.5 Compute -->
+      <div class="content" style="margin-top: 3rem;">
+        <h3 class="subtitle is-4" style="font-weight: 700;">Compute efficiency</h3>
+        <div class="result-headline">
+          On LLaMA-8B, COALA uses <strong>~17.6% of DPO's TFLOPS</strong> &mdash; a 5.7&times; reduction.
+        </div>
+        <div class="results-table">
+          <table>
+            <thead>
+              <tr><th>Model</th><th>COALA</th><th>DPO</th><th>ORPO</th><th>SFT</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>DistilGPT2</td><td><strong>152.56</strong></td><td>537.12</td><td>643.33</td><td>271</td></tr>
+              <tr><td>GPT-2</td><td><strong>379.89</strong></td><td>1,087.45</td><td>1,305.27</td><td>522</td></tr>
+              <tr><td>Mistral-7B</td><td><strong>1,580.45</strong></td><td>9,284.71</td><td>11,241.89</td><td>2,492</td></tr>
+              <tr><td>LLaMA-8B</td><td><strong>1,805.39</strong></td><td>10,253.37</td><td>12,352.98</td><td>2,851</td></tr>
+              <tr><td>Dolphin-7B</td><td><strong>1,794.66</strong></td><td>10,091.25</td><td>12,116.50</td><td>2,804</td></tr>
+            </tbody>
+            <caption>Table 3. TFLOPS measurements per method on the EduFeedback dataset.</caption>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EduFeedback -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">EduFeedback dataset</h2>
+      <div class="content">
+        <p>
+          We release <a href="https://github.com/miria00/COALA/" target="_blank" rel="noopener"><strong>EduFeedback</strong></a>:
+          26,621 GPT-4o-generated tutor conversations across 11 fields of study. Using the novel
+          <em>Alternating Population Strategy</em> we expand these to
+          <strong>65,606 preference triplets</strong> without any external reward model &mdash;
+          the first assistant turn becomes the "chosen" response and a later turn from the same
+          conversation becomes the "rejected" response. This exploits the natural drift from
+          direct answers to tangential follow-ups in objective domain dialogs.
+        </p>
+        <p>
+          COALA trained on these pairs achieves a <strong>39.1%</strong> win rate in human
+          evaluation, suggesting the strategy captures genuine preference signal at scale.
+          The dataset is released alongside the paper at the
+          <a href="https://github.com/miria00/COALA/" target="_blank" rel="noopener">project repository</a>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BibTeX -->
+  <section class="section hero is-light" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <div class="bibtex-header">
+        <h2 class="title">BibTeX</h2>
+        <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+          <i class="fas fa-copy"></i>
+          <span class="copy-text">Copy</span>
+        </button>
+      </div>
+      <pre id="bibtex-code"><code>@inproceedings{feng2026coala,
+  title     = {Convex Optimization for Alignment and Preference Learning on a Single GPU},
+  author    = {Feng, Miria and Pilanci, Mert},
+  booktitle = {Proceedings of the 43rd International Conference on Machine Learning},
+  year      = {2026},
+  series    = {PMLR 306},
+}</code></pre>
+    </div>
+  </section>
+
+  <!-- Acknowledgements -->
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h2 class="title is-3 has-text-centered">Acknowledgements</h2>
+      <div class="content has-text-justified" style="max-width: 760px; margin: 0 auto;">
+        <p>
+          This work was supported in part by the National Science Foundation (NSF) CAREER Award
+          under Grant CCF-2236829, in part by the National Institutes of Health under Grant
+          1R01AG08950901A1, in part by the Office of Naval Research under Grant N00014-24-1-2164,
+          and in part by the Defense Advanced Research Projects Agency under Grant
+          HR00112490441. Miria Feng was supported in part by the Stanford Graduate Fellowship.
+        </p>
+        <p>
+          The authors thank Lucy Woof, Zachary Frangella, and Kevin Nam for valuable feedback on
+          an early draft and many insightful discussions, and thank all human volunteers and FCS
+          Solutions for making the human-feedback evaluation possible.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="columns is-centered">
+        <div class="column is-8">
+          <div class="content has-text-centered">
+            <p>
+              <a href="https://github.com/miria00/COALA/" target="_blank" rel="noopener">Code on GitHub</a>
+              &nbsp;&middot;&nbsp;
+              <a href="https://github.com/miria00/COALA/blob/main/paper/Coala_preflearn_icml2026.pdf" target="_blank" rel="noopener">Paper PDF</a>
+            </p>
+            <p style="font-size: 0.85rem;">
+              This page was built using the
+              <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank" rel="noopener">Academic Project Page Template</a>,
+              adopted from the <a href="https://nerfies.github.io" target="_blank" rel="noopener">Nerfies</a> project page.
+              Licensed under
+              <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">CC BY-SA 4.0</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
