@@ -366,8 +366,9 @@
       <h2 class="title is-3 has-text-centered">Method</h2>
       <div class="content">
         <p style="font-size: 1.05rem; color: var(--text-secondary); max-width: 760px; margin: 0 auto 2rem; text-align: center;">
-          For a pre-trained backbone $f_{\theta_\mathrm{pre}}$, COALA stacks a convex two-layer
-          ReLU network on the frozen features and trains it in two phases.
+          COALA stacks a convex two-layer ReLU network on the frozen features of a pre-trained
+          backbone $f_{\theta_\mathrm{pre}}$, then runs in three phases: two convex training
+          stages followed by guided decoding at inference time.
         </p>
 
         <div class="method-phase">
