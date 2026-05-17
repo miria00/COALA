@@ -160,11 +160,12 @@ If you use COALA in your work, please cite
 
 ```bibtex
 @inproceedings{feng2026coala,
-  title  = {Convex Optimization for Alignment and Preference Learning on a Single GPU},
-  author = {Feng, Miria and Pilanci, Mert},
+  title     = {Convex Optimization for Alignment and Preference Learning on a Single GPU},
+  author    = {Feng, Miria and Pilanci, Mert},
   booktitle = {Proceedings of the 43rd International Conference on Machine Learning},
-  year   = {2026},
-  series = {PMLR 306},
+  year      = {2026},
+  series    = {Proceedings of Machine Learning Research},
+  publisher = {PMLR},
 }
 ```
 
