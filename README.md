@@ -1,16 +1,25 @@
-<h1 align="center">COALA</h1>
+<table border="0" cellpadding="0" cellspacing="0">
+<tr>
+<td width="70%" valign="middle">
 
-<p align="center">
-  <b>Convex Optimization for Alignment and Preference Learning</b><br>
-  A lightweight, reference-free framework for preference fine-tuning of LLMs on a single GPU.
-</p>
+<h1>COALA</h1>
 
-<p align="center">
+<b>Convex Optimization for Alignment and Preference Learning</b><br>
+A lightweight, reference-free framework for preference fine-tuning of LLMs on a single GPU.
+
+<p>
   <a href="paper/Coala_preflearn_icml2026.pdf"><img alt="paper" src="https://img.shields.io/badge/paper-ICML%202026-blue.svg"></a>
   <img alt="python" src="https://img.shields.io/badge/python-3.10%2B-blue.svg">
   <img alt="jax" src="https://img.shields.io/badge/jax-0.4.33-orange.svg">
   <img alt="license" src="https://img.shields.io/badge/license-MIT-green.svg">
 </p>
+
+</td>
+<td width="30%" valign="middle" align="right">
+<img src="docs/COALA.png" alt="COALA" width="240">
+</td>
+</tr>
+</table>
 
 ---
 
