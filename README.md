@@ -87,9 +87,7 @@ COALAgit/
 ├── cronos_trainer.py              # Stage 2 — Phase I (CRONOS, Algorithm 2)
 ├── defrun.py                      #         run wrapper for CRONOS
 │
-├── finetune_cvxdpo.py             # Stage 3 — Phase II (COALA loss, Algorithm 1)
-│
-└── guidance_sampling_pool2.py     # Stage 4 — guided generation
+└── finetune_coala.py              # Stage 3 — Phase II (COALA loss, Algorithm 1)
 ```
 
 This is the *minimal* pipeline. Baseline scripts (DPO / ORPO / SFT),
@@ -100,7 +98,7 @@ to keep the canonical reference clean.
 
 ## Quickstart
 
-The four-stage pipeline reproduces COALA on a single dataset / backbone pair.
+The three-stage pipeline reproduces COALA on a single dataset / backbone pair.
 
 ```bash
 # (Optional, only if your preference data is in JSON pairs) — prep into pos/neg txt
@@ -117,12 +115,9 @@ python extract.py \
 python cronos_trainer.py --model_name <model_name>
 
 # Stage 3 — Phase II: convex preference fine-tune θ_2
-python finetune_cvxdpo.py \
+python finetune_coala.py \
     --model_path  cvxNN_trained_<model_name>/ \
     --output_dir  Finetuned_cvxmlp_<model_name>/
-
-# Stage 4 — guided generation
-python guidance_sampling_pool2.py
 ```
 
 > **Note.** Several scripts contain absolute paths (e.g. `/home/miria/COALA/...`)

@@ -1,5 +1,5 @@
 '''
-this file loads the data, and runs finetuning stage for cvx-dpo
+this file loads the data, and runs the COALA finetuning stage
 this file contains TO DOs
 TO DO: change features loading to allow new dynamic features, instead of just on disc
 
@@ -17,7 +17,7 @@ output directory is:  /home/miria/CVXDPO/Finetuned_cvxmlp_custom_inference_ready
 beta=2.5, margin=1.0, gamma=0.5
 '''
 '''
-finetune_cvxdpo.py needs to accept model_path and output_dir arguments for use with run_cvxdpo_pipeline_simple.sh
+finetune_coala.py needs to accept model_path and output_dir arguments for use with run_coala_pipeline_simple.sh
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--model_path', type=str, required=True)
@@ -65,7 +65,7 @@ class FineTunedResults(NamedTuple):
     original_theta2: jnp.ndarray
     finetuned_theta2: jnp.ndarray
 
-def finetune_cvxdpo(model_path, output_dir, model_name="gpt2_imdb", data_seed=1024, learning_rate=1e-4, num_epochs=350, beta=1.0, gamma=0.5, batch_size=128):
+def finetune_coala(model_path, output_dir, model_name="gpt2_imdb", data_seed=1024, learning_rate=1e-4, num_epochs=350, beta=1.0, gamma=0.5, batch_size=128):
     """
     - Loads the trained convex model
     - Freezes the first layer (theta1)
@@ -554,7 +554,7 @@ if __name__ == "__main__":
     print(f"Output directory: {output_dir}")
     
     # finetune designed to be in same spirit as HuggingFace DPOtrainer
-    results = finetune_cvxdpo(
+    results = finetune_coala(
         model_path=model_path,
         output_dir=output_dir,
         model_name=model_name,  # Add this parameter
