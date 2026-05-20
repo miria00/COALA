@@ -158,8 +158,3 @@ The convex reformulation and CRONOS solver underpinning Phase I are due to:
   - Feng, Frangella & Pilanci, *CRONOS: Enhancing Deep Learning with Scalable
     GPU-Accelerated Convex Neural Networks*, NeurIPS 2024.
 
-
-
----
-
-[EduFeedback and Alternating Population Strategy for Preference Datasets available at: https://huggingface.co/datasets/miria0/EduFeedback](https://huggingface.co/datasets/miria0/EduFeedback)
