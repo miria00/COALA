@@ -5,7 +5,7 @@
 <h1>COALA</h1>
 
 <b>Convex Optimization for Alignment and Preference Learning</b><br>
-A lightweight, reference-free framework for preference fine-tuning of LLMs on a single GPU.
+A lightweight, reference-free framework for preference fine-tuning on a single GPU.
 
 <p>
   <a href="paper/Coala_preflearn_icml2026.pdf"><img alt="paper" src="https://img.shields.io/badge/paper-ICML%202026-blue.svg"></a>
@@ -24,7 +24,7 @@ A lightweight, reference-free framework for preference fine-tuning of LLMs on a 
 ---
 
 COALA (`Convex Optimization for Alignment and preference Learning Algorithm`) re-casts
-preference fine-tuning of large language models as a **convex optimization problem**
+preference fine-tuning of large language models as a convex program
 over the last layer of a two-layer ReLU network (`cvxNN`) stacked on top of a
 pre-trained backbone. By replacing the non-convex DPO objective with a convex
 reformulation that admits an ADMM solver (`CRONOS`), COALA
@@ -35,13 +35,13 @@ reformulation that admits an ADMM solver (`CRONOS`), COALA
   - inherits the convergence guarantees of convex programming — no `1e-9` learning
     rates, no grid-searched hyperparameters.
 
-Across five backbones (`DistilGPT2`, `GPT-2`, `Mistral-7B`, `Dolphin-2.6-7B`,
-`LLaMA-3.1-8B`) and three datasets (`EduFeedback`, `UltraFeedback`, `IMDb`),
+Across five backbones (`DistilGPT2`, `GPT-2`, `Mistral-7B`, `Dolphin-2.6-7B`, `LLaMA-3.2-3B`, 
+`LLaMA-3.1-8B`) and three datasets (`EduFeedback`, `UltraFeedback`, `IMDb`, `HelpSteer`),
 COALA matches or beats DPO and ORPO on AlpacaEval2 length-controlled win rate,
 and wins **39.1%** / **42.7%** of head-to-head matchups against the strongest
 baseline in our 107-person human study (paper Table 2).
 
-A summary of the method appears below; full derivations, proofs and experiments
+A summary of the method; derivations, proofs and experiments
 are in [`paper/Coala_preflearn_icml2026.pdf`](paper/Coala_preflearn_icml2026.pdf).
 
 ## Method
@@ -63,7 +63,7 @@ For a pre-trained backbone `f_pre`, COALA stacks a convex two-layer ReLU network
      accelerated-gradient guarantee (Theorem 4.3).
 
 The implementation is in JAX with `jit` compilation; the ADMM subproblems
-reduce to a vector add and one matrix–vector product, which the JAX backend
+reduce to a vector add and one matvec, which the JAX backend
 parallelises efficiently on a single GPU.
 
 ## Repository layout
@@ -71,7 +71,7 @@ parallelises efficiently on a single GPU.
 ```
 COALAgit/
 ├── paper/                         # ICML 2026 manuscript
-├── solve/                         # CRONOS / cvxNN core
+├── solve/                         # CRONOS solve skeleton core
 │   ├── models/                    #   cvx_mlp, cvx_relu_mlp, two_layer_mlp, get_model
 │   ├── optimizers/                #   admm, pcg, adamW, dadapt_adamW, varpro
 │   ├── preconditioner/            #   nystrom
@@ -93,29 +93,11 @@ COALAgit/
 └── guidance_sampling_pool2.py     # Stage 4 — guided generation
 ```
 
-This is the *minimal* reproducible pipeline. Baseline scripts (DPO / ORPO / SFT),
+This is the *minimal* pipeline. Baseline scripts (DPO / ORPO / SFT),
 evaluation drivers, paper plotting code, and the multi-backbone batch scripts
-that ran the full paper are tracked in the development branch but excluded here
+that ran the full paper excluded here
 to keep the canonical reference clean.
 
-## Installation
-
-COALA depends on JAX (with GPU support), PyTorch, HuggingFace `transformers`,
-`trl`, `peft`, and `datasets`. We recommend a fresh Python 3.10 environment:
-
-```bash
-git clone <your-fork-url> COALAgit
-cd COALAgit
-
-python -m venv .venv && source .venv/bin/activate
-
-# JAX 0.4.33 with CUDA 12 — adjust for your CUDA version
-pip install --upgrade "jax[cuda12]==0.4.33"
-
-# Core dependencies
-pip install torch transformers peft datasets accelerate \
-            numpy pandas optax wandb tqdm
-```
 
 ## Quickstart
 
@@ -145,27 +127,20 @@ python guidance_sampling_pool2.py
 ```
 
 > **Note.** Several scripts contain absolute paths (e.g. `/home/miria/COALA/...`)
-> from the original development environment. Adjust `BASE_DIR`, dataset, and
-> checkpoint paths at the top of each script to match your layout before
-> running.
+> from the original development environment. This will be fixed in the future
 
-## Datasets
+## Data
 
   - **EduFeedback** — `26,621` GPT-4o-generated tutor conversations across 11
     fields of study (introduced in this paper, paper §5.1 and Appendix E.3).
     The *Alternating Population Strategy* expands these to `65,606` preference
-    triplets without an external reward model.
-  - **UltraFeedback** — `64k` samples from
-    [`HuggingFaceH4/ultrafeedback_binarized`](https://huggingface.co/datasets/HuggingFaceH4/ultrafeedback_binarized).
-  - **IMDb** — `11k`-sample sentiment subset following Rafailov et al. (2024).
+    triplets without an external reward model [https://huggingface.co/datasets/miria0/EduFeedback](https://huggingface.co/datasets/miria0/EduFeedback). 
 
-Run `python download_datasets.py` to fetch HelpSteer / UltraFeedback and
-format them into `datasets/<name>/{pos,neg}/`. EduFeedback samples are
-released alongside the paper.
 
-## Citing
 
-If you use COALA in your work, please cite
+## Citation
+
+If COALA was helpful in your work, please cite
 
 ```bibtex
 @inproceedings{feng2026coala,
@@ -180,17 +155,12 @@ If you use COALA in your work, please cite
 
 The convex reformulation and CRONOS solver underpinning Phase I are due to:
 
-  - Pilanci & Ergen, *Neural Networks are Convex Regularizers*, ICML 2020.
+  - Pilanci & Ergen, *Neural Networks are Convex Regularizers: Exact Polynomial-time Convex Optimization Formulations for Two-layer Networks*, ICML 2020.
   - Feng, Frangella & Pilanci, *CRONOS: Enhancing Deep Learning with Scalable
     GPU-Accelerated Convex Neural Networks*, NeurIPS 2024.
 
-## Authors
 
-  - **Miria Feng** — `miria00 [at] stanford.edu`
-  - **Mert Pilanci**
 
-Stanford University, Department of Electrical Engineering.
+---
 
-## License
-
-MIT. See [`LICENSE`](LICENSE).
+[EduFeedback and Alternating Population Strategy for Preference Datasets available at: https://huggingface.co/datasets/miria0/EduFeedback](https://huggingface.co/datasets/miria0/EduFeedback)
