@@ -30,7 +30,7 @@ pre-trained backbone. By replacing the non-convex DPO objective with a convex
 reformulation that admits an ADMM solver (`CRONOS`), COALA
 
   - eliminates the reference model required by DPO (cutting VRAM by `~2x`),
-  - reaches stable, monotonically increasing reward margins in `~17.6%` of DPO's TFLOPS,
+  - reaches stable, monotonically increasing reward margins in as little as `~17.6%` of DPO's TFLOPs,
   - runs end-to-end on a single RTX 4090 (24 GB), and
   - inherits the convergence guarantees of convex programming — no `1e-9` learning
     rates, no grid-searched hyperparameters.
@@ -38,10 +38,9 @@ reformulation that admits an ADMM solver (`CRONOS`), COALA
 Across five backbones (`DistilGPT2`, `GPT-2`, `Mistral-7B`, `Dolphin-2.6-7B`, `LLaMA-3.2-3B`, 
 `LLaMA-3.1-8B`) and three datasets (`EduFeedback`, `UltraFeedback`, `IMDb`, `HelpSteer`),
 COALA matches or beats DPO and ORPO on AlpacaEval2 length-controlled win rate,
-and wins **39.1%** / **42.7%** of head-to-head matchups against the strongest
-baseline in our 107-person human study (paper Table 2).
+and wins 39.1% / 42.7% of head-to-head multiple choice matchups against competing methods in our 107-person human study (paper Table 2).
 
-A summary of the method; derivations, proofs and experiments
+A summary of the practical use-cases, method, derivations, proofs and experiments
 are in [`paper/Coala_preflearn_icml2026.pdf`](paper/Coala_preflearn_icml2026.pdf).
 
 ## Method
