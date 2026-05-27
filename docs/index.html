@@ -242,8 +242,7 @@
     }
     .compare-fig img {
       width: 100%;
-      aspect-ratio: 866 / 506;
-      object-fit: contain;
+      height: auto;
       display: block;
       background: #fff;
     }
@@ -253,7 +252,6 @@
       color: var(--text-secondary);
       background: var(--background-secondary);
       border-top: 1px solid var(--border-color);
-      flex: 1 1 auto;
       line-height: 1.45;
     }
     @media screen and (max-width: 768px) {
@@ -433,16 +431,13 @@
           consequence of optimizing a convex objective. DPO's margins, in contrast, are noisy
           and frequently plateau or decay (paper Fig.&nbsp;1).
         </p>
-        <div class="compare-grid">
-          <figure class="compare-fig">
-            <img src="static/images/reward_margins_coala.png" alt="COALA reward margin curves, all monotonically increasing." loading="lazy">
-            <figcaption><strong>(a) COALA</strong> &mdash; reward margins increase stably and monotonically across all three models.</figcaption>
-          </figure>
-          <figure class="compare-fig">
-            <img src="static/images/reward_margins_dpo.png" alt="DPO reward margin curves, noisy and frequently decaying." loading="lazy">
-            <figcaption><strong>(b) DPO</strong> &mdash; reward margins are noisy and hyperparameter-sensitive across the same three models.</figcaption>
-          </figure>
-        </div>
+        <figure class="compare-fig" style="margin: 1rem 0 1.5rem;">
+          <img src="reward_margins.png" alt="Reward margins on the IMDb dataset: COALA increases monotonically; DPO is noisy and unstable." loading="lazy">
+          <figcaption>
+            <strong>(a) COALA</strong> &mdash; reward margins increase stably and monotonically across all three models.
+            &nbsp;&nbsp;<strong>(b) DPO</strong> &mdash; reward margins are noisy and hyperparameter-sensitive across the same three models.
+          </figcaption>
+        </figure>
       </div>
 
       <!-- 6.2 AlpacaEval2 -->
