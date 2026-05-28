@@ -268,12 +268,12 @@
           <h2 class="title is-3">Method</h2>
           <div class="content has-text-justified">
             <p>
-              COALA stacks a convex two-layer ReLU network on the frozen features of a pre-trained backbone
-              $f_{\theta_\mathrm{pre}}$ and trains it in two convex stages: convex cvxNN training (Phase&nbsp;I),
+              COALA stacks a convex two-layer ReLU network (cvxNN) on the frozen features of a pre-trained backbone
+              $f_{\theta_\mathrm{pre}}$ and trains it in two convex stages: cvxNN training (Phase&nbsp;I),
               followed by reference-free convex preference fine-tuning (Phase&nbsp;II).
             </p>
 
-            <h3 class="title is-4">Phase I &mdash; CRONOS: convex cvxNN training</h3>
+            <h3 class="title is-4">Phase I &mdash; CRONOS: cvxNN training</h3>
             <p>
               We solve the convex reformulation of the two-layer ReLU network
               (<a href="https://arxiv.org/abs/2002.10588" target="_blank" rel="noopener">Pilanci &amp; Ergen, 2020</a>)
