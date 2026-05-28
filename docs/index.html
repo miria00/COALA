@@ -165,7 +165,7 @@
               <div class="publication-links">
                 <!-- Paper Link -->
                 <span class="link-block">
-                  <a href="https://github.com/miria00/COALA/blob/main/paper/Coala_preflearn_icml2026.pdf"
+                  <a href="https://arxiv.org/abs/2605.23244"
                     target="_blank" rel="noopener"
                     class="external-link button is-normal is-rounded is-dark">
                     <span class="icon">
@@ -176,7 +176,7 @@
                 </span>
                 <!-- Code Link -->
                 <span class="link-block">
-                  <a href="https://github.com/miria00/COALA/" target="_blank" rel="noopener"
+                  <a href="https://github.com/pilancilab/COALA/" target="_blank" rel="noopener"
                     class="external-link button is-normal is-rounded is-dark">
                     <span class="icon">
                       <i class="fab fa-github"></i>
@@ -220,9 +220,10 @@
         <h2 class="subtitle has-text-centered">
           <strong>COALA</strong> recasts preference fine-tuning as a convex program over the last layer of a two-layer
           ReLU network stacked on a frozen backbone, solved reference-free via an ADMM reformulation
-          (<a href="https://arxiv.org/abs/2411.01088" target="_blank" rel="noopener">CRONOS</a>). Because the objective
-          is convex, reward margins increase stably and monotonically (above), whereas DPO's are noisy and
-          hyperparameter-sensitive. COALA drops the reference model, trains end-to-end on a single RTX&nbsp;4090, and
+          (<a href="https://arxiv.org/abs/2411.01088" target="_blank" rel="noopener">CRONOS</a>). Empirically its
+          reward margins rise steadily and stably (above) &mdash; consistent with the convex formulation and its
+          convergence guarantees &mdash; whereas DPO's are noisier and more hyperparameter-sensitive. COALA drops the
+          reference model, trains end-to-end on a single RTX&nbsp;4090, and
           matches or beats DPO and ORPO using as little as <strong>~17.6%</strong> of DPO's TFLOPs.
         </h2>
       </div>
@@ -276,7 +277,7 @@
             <h3 class="title is-4">Phase I &mdash; CRONOS: cvxNN training</h3>
             <p>
               We solve the convex reformulation of the two-layer ReLU network
-              (<a href="https://arxiv.org/abs/2002.10588" target="_blank" rel="noopener">Pilanci &amp; Ergen, 2020</a>)
+              (<a href="https://arxiv.org/abs/2002.10553" target="_blank" rel="noopener">Pilanci &amp; Ergen, 2020</a>)
               with <strong>CRONOS</strong>, an ADMM solver using preconditioned conjugate gradients
               (<a href="https://arxiv.org/abs/2411.01088" target="_blank" rel="noopener">Feng, Frangella &amp; Pilanci, 2024</a>).
               Once the two subproblems are solved, each ADMM iteration reduces to a vector addition and a single
@@ -320,9 +321,9 @@
           <div class="content has-text-justified">
             <p>
               For the three models in the figure at the top of this page, each evaluated with and without SFT
-              initialization, COALA's reward margin increases monotonically &mdash; a direct consequence of optimizing a
-              convex objective. DPO's margins, in contrast, are noisy and frequently plateau or decay, and are sensitive
-              to hyperparameters.
+              initialization, COALA empirically shows stable, steadily increasing reward margins, consistent with its
+              convex formulation and convergence guarantees; DPO trajectories are noisier and more
+              hyperparameter-sensitive, frequently plateauing or decaying.
             </p>
           </div>
 
